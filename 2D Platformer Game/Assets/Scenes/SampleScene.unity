@@ -14254,6 +14254,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   runSpeed: 600
   jumpSpeed: 1200
+  slideSpeed: 200
 --- !u!95 &1778856062
 Animator:
   serializedVersion: 5
