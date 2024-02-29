@@ -50,20 +50,18 @@ public class FallingPlatformMovement : MonoBehaviour
         Destroy(gameObject);
     }
 
+    void IsFalling()
+    {
+        falling=true;
+    }
+
     // Update is called once per frame
     void Update()
     {
 
         if (IsStomped())
         {
-            if (fallingTime < 0f)
-            {
-                falling = true;
-            }
-            else
-            {
-                fallingTime -= Time.deltaTime;
-            }
+            Invoke(nameof(IsFalling),fallingTime);
         }
 
         if (falling)
