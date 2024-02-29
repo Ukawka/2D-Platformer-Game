@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float runSpeed = 600f;
     [SerializeField] float jumpSpeed = 1200f;
-    [SerializeField] float slideSpeed = 200f;
+    [SerializeField] float wallSlideSpeed = 200f;
 
     float horizontal = 0;
     bool jump = false;
@@ -81,9 +81,9 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed * Time.deltaTime);
         }
 
-        if (IsOnWall())
+        if (!IsGrounded() && ((IsOnLeftWall() && horizontal < 0) || (IsOnRightWall() && horizontal > 0)))
         {
-            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -slideSpeed * Time.deltaTime, float.MaxValue));
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlideSpeed * Time.deltaTime, float.MaxValue));
         }
     }
 
@@ -99,11 +99,11 @@ public class PlayerMovement : MonoBehaviour
 
     bool IsOnLeftWall()
     {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground")) && !IsGrounded();
+        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground"));
     }
 
     bool IsOnRightWall()
     {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground")) && !IsGrounded();
+        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground"));
     }
 }
