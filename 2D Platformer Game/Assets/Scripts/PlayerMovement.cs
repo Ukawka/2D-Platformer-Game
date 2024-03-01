@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
 
-    enum MovementState { idle, run, jump, fall }
+    enum MovementState { idle, run, jump, fall, wallSlide }
 
     SpriteRenderer sprite;
     Rigidbody2D rb;
@@ -14,8 +14,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float jumpSpeed = 1200f;
     [SerializeField] float wallSlideSpeed = 200f;
 
-    float horizontal = 0;
-    bool jump = false;
+    float hAxisInput = 0;
+    bool jumpButtonPressed = false;
+
+    bool isGrounded = false;
+    bool isTouchingWall = false;
+    bool isTouchingLeftWall = false;
+    bool isTouchingRightWall = false;
+    MovementState movementState = MovementState.idle;
+
+    bool toJump = false;
 
     void Start()
     {
@@ -29,81 +37,100 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         UpdateInput();
+        UpdateCollideState();
+        UpdateToDo();
+        UpdateMovementState();
         UpdateAnimationState();
     }
 
     void UpdateInput()
     {
-        horizontal = Input.GetAxisRaw("Horizontal");
-        if (Input.GetButtonDown("Jump") && IsGrounded())
+        hAxisInput = Input.GetAxisRaw("Horizontal");
+        jumpButtonPressed = Input.GetButtonDown("Jump");
+    }
+
+    void UpdateCollideState()
+    {
+        isGrounded = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingLeftWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingRightWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingWall = isTouchingLeftWall || isTouchingRightWall;
+    }
+
+    void UpdateToDo()
+    {
+        if (jumpButtonPressed && isGrounded)
         {
-            jump = true;
+            toJump = true;
+        }
+    }
+
+    void UpdateMovementState()
+    {
+        // judge by input and collide state
+        if (isGrounded)
+        {
+            if (hAxisInput == 0)
+            {
+                movementState = MovementState.idle;
+            }
+            else
+            {
+                movementState = MovementState.run;
+            }
+        }
+        else if (rb.velocity.y < -.1f && ((isTouchingLeftWall && hAxisInput < 0) || (isTouchingRightWall && hAxisInput > 0)))
+        {
+            movementState = MovementState.wallSlide;
+        }
+        else
+        {
+            if (rb.velocity.y > .1f)
+            {
+                movementState = MovementState.jump;
+            }
+            else if (rb.velocity.y < -.1f)
+            {
+                movementState = MovementState.fall;
+            }
+        }
+
+        // judge by todos
+        if (toJump)
+        {
+            movementState = MovementState.jump;
         }
     }
 
     void UpdateAnimationState()
     {
+        anim.SetInteger("movement state", (int)movementState);
 
-        MovementState state = MovementState.idle;
-
-        if (horizontal > 0)
+        if (hAxisInput > 0)
         {
-            state = MovementState.run;
             sprite.flipX = false;
         }
-        else if (horizontal < 0)
+        else if (hAxisInput < 0)
         {
-            state = MovementState.run;
             sprite.flipX = true;
         }
-
-        if (rb.velocity.y > .1f)
-        {
-            state = MovementState.jump;
-        }
-        else if (rb.velocity.y < -.1f)
-        {
-            state = MovementState.fall;
-        }
-
-        anim.SetInteger("state", (int)state);
     }
 
     void FixedUpdate()
     {
-        // move player according to input by setting velocity
+        // set velocity
 
-        rb.velocity = new Vector2(horizontal * runSpeed * Time.deltaTime, rb.velocity.y);
-        
-        if (jump)
+        rb.velocity = new Vector2(hAxisInput * runSpeed * Time.deltaTime, rb.velocity.y);
+
+        if (toJump)
         {
-            jump = false;
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed * Time.deltaTime);
+            toJump = false;
         }
 
-        if (!IsGrounded() && ((IsOnLeftWall() && horizontal < 0) || (IsOnRightWall() && horizontal > 0)))
+        if (movementState == MovementState.wallSlide)
         {
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlideSpeed * Time.deltaTime, float.MaxValue));
         }
-    }
-
-    bool IsGrounded()
-    {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, 1 << LayerMask.NameToLayer("Ground"));
-    }
-
-    bool IsOnWall()
-    {
-        return IsOnLeftWall() || IsOnRightWall();
-    }
-
-    bool IsOnLeftWall()
-    {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground"));
-    }
-
-    bool IsOnRightWall()
-    {
-        return Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground"));
     }
 }
