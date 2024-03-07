@@ -5,10 +5,10 @@ public class FallingPlatformMovement : MonoBehaviour
     [SerializeField] private bool shaking = true;
     [SerializeField] private float shakeVelocity = 0.3f;
     [SerializeField] private float range = 0.2f;
-    [SerializeField] private float fallingTime = 0.5f;
+    [SerializeField] private float fallDelay = 0.5f;
     private Rigidbody2D rb;
     private BoxCollider2D coll;
-    private float shakeUbound, shakeLbound, destroyTime = 2f;
+    private float shakeUbound, shakeLbound, destroyDelay = 2f;
     private bool falling = false, stomped = false;
 
     // Start is called before the first frame update
@@ -50,25 +50,20 @@ public class FallingPlatformMovement : MonoBehaviour
         Destroy(gameObject);
     }
 
-    void IsFalling()
+    void StartFalling()
     {
         falling=true;
+        coll.enabled = false;
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        Invoke(nameof(SelfDestroy),destroyDelay);
     }
 
     // Update is called once per frame
     void Update()
     {
-
         if (IsStomped())
         {
-            Invoke(nameof(IsFalling),fallingTime);
-        }
-
-        if (falling)
-        {
-            coll.enabled = false;
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            Invoke(nameof(SelfDestroy),destroyTime);
+            Invoke(nameof(StartFalling),fallDelay);
         }
     }
 
