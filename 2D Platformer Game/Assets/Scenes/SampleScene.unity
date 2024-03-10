@@ -14252,9 +14252,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef0ff59884669024a83b773e2e1ff74b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  runSpeed: 600
-  jumpSpeed: 1200
-  slideSpeed: 200
+  runSpeed: 12
+  jumpSpeed: 24
+  wallSlideSpeed: 4
 --- !u!95 &1778856062
 Animator:
   serializedVersion: 5

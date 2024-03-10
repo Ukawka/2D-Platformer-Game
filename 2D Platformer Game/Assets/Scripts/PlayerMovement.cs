@@ -9,9 +9,9 @@ public class PlayerMovement : MonoBehaviour
     Animator anim;
 
     // parameter
-    [SerializeField] float runSpeed = 600f;
-    [SerializeField] float jumpSpeed = 1200f;
-    [SerializeField] float wallSlideSpeed = 200f;
+    [SerializeField] float runSpeed = 12f;
+    [SerializeField] float jumpSpeed = 24f;
+    [SerializeField] float wallSlideSpeed = 4f;
 
     // input
     float hAxisInput = 0;
@@ -105,21 +105,21 @@ public class PlayerMovement : MonoBehaviour
         // move horizontally
         if (hAxisInput != 0)
         {
-            rb.velocity = new Vector2(hAxisInput * runSpeed * Time.deltaTime, rb.velocity.y);
+            rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
             isActMovingH = true;
             isActMovingL = hAxisInput < 0;
             isActMovingR = hAxisInput > 0;
         }
         else
         {
-            rb.velocity = new Vector2(hAxisInput * runSpeed * Time.deltaTime, rb.velocity.y);
+            rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
             isActMovingH = isActMovingL = isActMovingR = false;
         }
 
         // wall slide
         if (!isGrounded && ((isTouchingLeftWall && hAxisInput < 0) || (isTouchingRightWall && hAxisInput > 0)) && rb.velocity.y < -.1f)
         {
-            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlideSpeed * Time.deltaTime, float.MaxValue));
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlideSpeed, float.MaxValue));
             isWallSliding = true;
         }
         else
@@ -130,7 +130,7 @@ public class PlayerMovement : MonoBehaviour
         // jump
         if (toJump)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpSpeed * Time.deltaTime);
+            rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
             toJump = false;
         }
     }
