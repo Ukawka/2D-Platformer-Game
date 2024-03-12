@@ -14255,6 +14255,7 @@ MonoBehaviour:
   runSpeed: 12
   jumpSpeed: 24
   wallSlideSpeed: 4
+  jumpGraceTime: 0.1
 --- !u!95 &1778856062
 Animator:
   serializedVersion: 5

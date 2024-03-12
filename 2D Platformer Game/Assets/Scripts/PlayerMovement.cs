@@ -8,7 +8,8 @@ public class PlayerMovement : MonoBehaviour
     BoxCollider2D coll;
     Animator anim;
 
-    // parameter
+    // speed
+    [Header("Speed")]
     [SerializeField] float runSpeed = 12f;
     [SerializeField] float jumpSpeed = 24f;
     [SerializeField] float wallSlideSpeed = 4f;
@@ -24,6 +25,11 @@ public class PlayerMovement : MonoBehaviour
 
     // to-do
     bool toJump = false;
+
+    // grace time
+    [Header("Grace Time")]
+    [SerializeField] float jumpGraceTime = .1f;
+    float jumpGraceTimer = 0;
 
     // animation state
     enum AnimationState { idle, run, rise, fall, wallSlide }
@@ -67,7 +73,14 @@ public class PlayerMovement : MonoBehaviour
 
     void UpdateToDo()
     {
-        if (jumpButtonPressed && isGrounded)
+        // jump grace
+        if (isGrounded)
+            jumpGraceTimer = jumpGraceTime;
+        else if (jumpGraceTimer > 0)
+            jumpGraceTimer -= Time.deltaTime;
+
+        // to jump or not
+        if (jumpButtonPressed && jumpGraceTimer > 0)
             toJump = true;
     }
 
@@ -131,6 +144,7 @@ public class PlayerMovement : MonoBehaviour
         if (toJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
+            jumpGraceTimer = 0;
             toJump = false;
         }
     }
