@@ -191,4 +191,4 @@ MonoBehaviour:
   shaking: 1
   shakeVelocity: 0.3
   range: 0.2
-  fallingTime: 0.2
+  fallDelay: 0.5
