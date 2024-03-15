@@ -16,7 +16,9 @@ public class PlayerMovement : MonoBehaviour
 
     // input
     float hAxisInput = 0;
-    bool jumpButtonPressed = false;
+    [Header("Input Buffer Time")]
+    [SerializeField] float jumpButtonDownBufferTime = .1f;
+    float jumpButtonDownBufferTimer = 0;
 
     // collide state
     bool isGrounded = false;
@@ -61,7 +63,12 @@ public class PlayerMovement : MonoBehaviour
     void UpdateInput()
     {
         hAxisInput = Input.GetAxisRaw("Horizontal");
-        jumpButtonPressed = Input.GetButtonDown("Jump");
+
+        // jump button down input buffer
+        if (Input.GetButtonDown("Jump"))
+            jumpButtonDownBufferTimer = jumpButtonDownBufferTime;
+        else if (jumpButtonDownBufferTimer > 0)
+            jumpButtonDownBufferTimer -= Time.deltaTime;
     }
 
     void UpdateCollideState()
@@ -73,15 +80,21 @@ public class PlayerMovement : MonoBehaviour
 
     void UpdateToDo()
     {
-        // jump grace
-        if (isGrounded)
-            jumpGraceTimer = jumpGraceTime;
-        else if (jumpGraceTimer > 0)
-            jumpGraceTimer -= Time.deltaTime;
+        if (!toJump)
+        {
+            // jump grace
+            if (isGrounded)
+                jumpGraceTimer = jumpGraceTime;
+            else if (jumpGraceTimer > 0)
+                jumpGraceTimer -= Time.deltaTime;
 
-        // to jump or not
-        if (jumpButtonPressed && jumpGraceTimer > 0)
-            toJump = true;
+            if (jumpButtonDownBufferTimer > 0 && jumpGraceTimer > 0)
+            {
+                toJump = true;
+                jumpButtonDownBufferTimer = 0;
+                jumpGraceTimer = 0;
+            }
+        }
     }
 
     void UpdateAnimation()
@@ -144,7 +157,6 @@ public class PlayerMovement : MonoBehaviour
         if (toJump)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
-            jumpGraceTimer = 0;
             toJump = false;
         }
     }
