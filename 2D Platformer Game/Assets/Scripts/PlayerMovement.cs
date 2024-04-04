@@ -13,6 +13,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float runSpeed = 12f;
     [SerializeField] float jumpSpeed = 24f;
     [SerializeField] float wallSlideSpeed = 4f;
+    [SerializeField] float wallJumpSpeedX = 12f;
+    [SerializeField] float wallJumpSpeedY = 18f;
 
     // input
     float hAxisInput = 0;
@@ -22,16 +24,26 @@ public class PlayerMovement : MonoBehaviour
 
     // collide state
     bool isGrounded = false;
-    bool isTouchingLeftWall = false;
-    bool isTouchingRightWall = false;
+    bool isTouchingLWall = false;
+    bool isTouchingRWall = false;
+    bool isTouchingWall = false;
 
     // to-do
     bool toJump = false;
+    bool toWallJump = false;
+    int wallJumpDirection = 0; // 1 for right, -1 for left
 
     // grace time
     [Header("Grace Time")]
     [SerializeField] float jumpGraceTime = .1f;
     float jumpGraceTimer = 0;
+    [SerializeField] float wallJumpGraceTime = .05f;
+    float wallJumpGraceTimer = 0;
+
+    // control lock
+    bool moveHEnabled = true;
+    [Header("Control Lock")]
+    [SerializeField] float wallJumpCtrlLockTime = .1f;
 
     // animation state
     enum AnimationState { idle, run, rise, fall, wallSlide }
@@ -74,8 +86,9 @@ public class PlayerMovement : MonoBehaviour
     void UpdateCollideState()
     {
         isGrounded = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.down, .1f, 1 << LayerMask.NameToLayer("Ground"));
-        isTouchingLeftWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground"));
-        isTouchingRightWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingLWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.left, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingRWall = Physics2D.BoxCast(coll.bounds.center, coll.bounds.size, 0f, Vector2.right, .1f, 1 << LayerMask.NameToLayer("Ground"));
+        isTouchingWall = isTouchingLWall || isTouchingRWall;
     }
 
     void UpdateToDo()
@@ -93,6 +106,30 @@ public class PlayerMovement : MonoBehaviour
                 toJump = true;
                 jumpButtonDownBufferTimer = 0;
                 jumpGraceTimer = 0;
+            }
+        }
+        if (!toWallJump)
+        {
+            // wall jump grace
+            if (isGrounded)
+            {
+                wallJumpGraceTimer = 0;
+            }
+            else if (isTouchingWall)
+            {
+                wallJumpGraceTimer = wallJumpGraceTime;
+                wallJumpDirection = isTouchingLWall ? 1 : -1;
+            }
+            else if (wallJumpGraceTimer > 0)
+            {
+                wallJumpGraceTimer -= Time.deltaTime;
+            }
+
+            if (jumpButtonDownBufferTimer > 0 && wallJumpGraceTimer > 0)
+            {
+                toWallJump = true;
+                jumpButtonDownBufferTimer = 0;
+                wallJumpGraceTimer = 0;
             }
         }
     }
@@ -129,21 +166,24 @@ public class PlayerMovement : MonoBehaviour
     void FixedUpdate()
     {
         // move horizontally
-        if (hAxisInput != 0)
+        if (moveHEnabled)
         {
-            rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
-            isActMovingH = true;
-            isActMovingL = hAxisInput < 0;
-            isActMovingR = hAxisInput > 0;
-        }
-        else
-        {
-            rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
-            isActMovingH = isActMovingL = isActMovingR = false;
+            if (hAxisInput != 0)
+            {
+                rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
+                isActMovingH = true;
+                isActMovingL = hAxisInput < 0;
+                isActMovingR = hAxisInput > 0;
+            }
+            else
+            {
+                rb.velocity = new Vector2(hAxisInput * runSpeed, rb.velocity.y);
+                isActMovingH = isActMovingL = isActMovingR = false;
+            }
         }
 
         // wall slide
-        if (!isGrounded && ((isTouchingLeftWall && hAxisInput < 0) || (isTouchingRightWall && hAxisInput > 0)) && rb.velocity.y < -.1f)
+        if (!isGrounded && ((isTouchingLWall && hAxisInput < 0) || (isTouchingRWall && hAxisInput > 0)) && rb.velocity.y < -.1f)
         {
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Clamp(rb.velocity.y, -wallSlideSpeed, float.MaxValue));
             isWallSliding = true;
@@ -159,5 +199,27 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
             toJump = false;
         }
+
+        // wall jump
+        if (toWallJump)
+        {
+            rb.velocity = new Vector2(wallJumpSpeedX * wallJumpDirection, wallJumpSpeedY);
+            isActMovingH = true;
+            isActMovingR = wallJumpDirection > 0;
+            isActMovingL = wallJumpDirection < 0;
+            WallJumpCtrlLock();
+            toWallJump = false;
+            wallJumpDirection = 0;
+        }
+    }
+
+    void WallJumpCtrlLock()
+    {
+        moveHEnabled = false;
+        Invoke(nameof(ReleaseWallJumpCtrlLock), wallJumpCtrlLockTime);
+    }
+    void ReleaseWallJumpCtrlLock()
+    {
+        moveHEnabled = true;
     }
 }

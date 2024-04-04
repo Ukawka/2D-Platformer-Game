@@ -14255,8 +14255,12 @@ MonoBehaviour:
   runSpeed: 12
   jumpSpeed: 24
   wallSlideSpeed: 4
+  wallJumpSpeedX: 12
+  wallJumpSpeedY: 18
   jumpButtonDownBufferTime: 0.1
   jumpGraceTime: 0.1
+  wallJumpGraceTime: 0.05
+  wallJumpCtrlLockTime: 0.1
 --- !u!95 &1778856062
 Animator:
   serializedVersion: 5
