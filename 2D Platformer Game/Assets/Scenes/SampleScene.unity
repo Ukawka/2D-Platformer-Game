@@ -14257,6 +14257,7 @@ MonoBehaviour:
   wallSlideSpeed: 4
   wallJumpSpeedX: 12
   wallJumpSpeedY: 18
+  doubleJumpSpeed: 18
   jumpButtonDownBufferTime: 0.1
   jumpGraceTime: 0.1
   wallJumpGraceTime: 0.05
