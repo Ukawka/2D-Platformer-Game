@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float wallSlideSpeed = 4f;
     [SerializeField] float wallJumpSpeedX = 12f;
     [SerializeField] float wallJumpSpeedY = 18f;
+    [SerializeField] float doubleJumpSpeed = 18f;
 
     // input
     float hAxisInput = 0;
@@ -32,6 +33,8 @@ public class PlayerMovement : MonoBehaviour
     bool toJump = false;
     bool toWallJump = false;
     int wallJumpDirection = 0; // 1 for right, -1 for left
+    bool toDoubleJump = false;
+    bool doubleJumpable = false;
 
     // grace time
     [Header("Grace Time")]
@@ -46,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float wallJumpCtrlLockTime = .1f;
 
     // animation state
-    enum AnimationState { idle, run, rise, fall, wallSlide }
+    enum AnimationState { idle, run, rise, fall, wallSlide, doubleJump }
     AnimationState animState = AnimationState.idle;
 
     // actual move
@@ -54,6 +57,7 @@ public class PlayerMovement : MonoBehaviour
     bool isActMovingL = false; // is actively moving left
     bool isActMovingR = false; // is actively moving right
     bool isWallSliding = false;
+    bool doubleJumped = false;
 
     void Start()
     {
@@ -108,6 +112,7 @@ public class PlayerMovement : MonoBehaviour
                 jumpGraceTimer = 0;
             }
         }
+
         if (!toWallJump)
         {
             // wall jump grace
@@ -132,6 +137,19 @@ public class PlayerMovement : MonoBehaviour
                 wallJumpGraceTimer = 0;
             }
         }
+
+        if (!toDoubleJump)
+        {
+            if (isGrounded || isTouchingWall)
+                doubleJumpable = true;
+
+            if (jumpButtonDownBufferTimer > 0 && doubleJumpable)
+            {
+                toDoubleJump = true;
+                jumpButtonDownBufferTimer = 0;
+                doubleJumpable = false;
+            }
+        }
     }
 
     void UpdateAnimation()
@@ -153,6 +171,12 @@ public class PlayerMovement : MonoBehaviour
                 animState = AnimationState.rise;
             else if (rb.velocity.y < -.1f) // in the air & moving downwards => falling
                 animState = AnimationState.fall;
+        }
+
+        if (doubleJumped)
+        {
+            animState = AnimationState.doubleJump;
+            doubleJumped = false;
         }
 
         anim.SetInteger("state", (int)animState);
@@ -210,6 +234,14 @@ public class PlayerMovement : MonoBehaviour
             WallJumpCtrlLock();
             toWallJump = false;
             wallJumpDirection = 0;
+        }
+
+        // double jump
+        if (toDoubleJump)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, doubleJumpSpeed);
+            doubleJumped = true;
+            toDoubleJump = false;
         }
     }
 
