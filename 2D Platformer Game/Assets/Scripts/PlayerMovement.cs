@@ -13,8 +13,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float runSpeed = 12f;
     [SerializeField] float jumpSpeed = 24f;
     [SerializeField] float wallSlideSpeed = 4f;
-    [SerializeField] float wallJumpSpeedX = 12f;
-    [SerializeField] float wallJumpSpeedY = 18f;
+    [SerializeField] Vector2 wallJumpSpeed = new(12f, 18f);
     [SerializeField] float doubleJumpSpeed = 18f;
 
     // input
@@ -32,7 +31,6 @@ public class PlayerMovement : MonoBehaviour
     // to-do
     bool toJump = false;
     bool toWallJump = false;
-    int wallJumpDirection = 0; // 1 for right, -1 for left
     bool toDoubleJump = false;
     bool doubleJumpable = false;
 
@@ -123,7 +121,7 @@ public class PlayerMovement : MonoBehaviour
             else if (isTouchingWall)
             {
                 wallJumpGraceTimer = wallJumpGraceTime;
-                wallJumpDirection = isTouchingLWall ? 1 : -1;
+                wallJumpSpeed.x = isTouchingLWall ? Mathf.Abs(wallJumpSpeed.x) : -Mathf.Abs(wallJumpSpeed.x);
             }
             else if (wallJumpGraceTimer > 0)
             {
@@ -227,13 +225,12 @@ public class PlayerMovement : MonoBehaviour
         // wall jump
         if (toWallJump)
         {
-            rb.velocity = new Vector2(wallJumpSpeedX * wallJumpDirection, wallJumpSpeedY);
+            rb.velocity = wallJumpSpeed;
             isActMovingH = true;
-            isActMovingR = wallJumpDirection > 0;
-            isActMovingL = wallJumpDirection < 0;
+            isActMovingR = wallJumpSpeed.x > 0;
+            isActMovingL = wallJumpSpeed.x < 0;
             WallJumpCtrlLock();
             toWallJump = false;
-            wallJumpDirection = 0;
         }
 
         // double jump

@@ -14255,8 +14255,7 @@ MonoBehaviour:
   runSpeed: 12
   jumpSpeed: 24
   wallSlideSpeed: 4
-  wallJumpSpeedX: 12
-  wallJumpSpeedY: 18
+  wallJumpSpeed: {x: 12, y: 18}
   doubleJumpSpeed: 18
   jumpButtonDownBufferTime: 0.1
   jumpGraceTime: 0.1
